@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0f172a">
+<title>Site Record Book</title>
+<link rel="stylesheet" href="style1.css">
+<link rel="stylesheet" href="style2.css">
+</head>
+<body>
+
+<!-- SETUP SCREEN -->
+<div class="setup-overlay" id="setupScreen">
+  <div class="setup-card">
+    <div class="setup-logo">🏗️</div>
+    <div class="setup-title">Site Record Book</div>
+    <div class="setup-desc">Connect to Google Sheets to sync your data online. Safe, free, accessible from any device.</div>
+    <div class="setup-steps">
+      <div class="setup-step"><div class="setup-num">1</div><div class="setup-step-text">Open your <b>Google Sheet</b> (link shared in chat)</div></div>
+      <div class="setup-step"><div class="setup-num">2</div><div class="setup-step-text">Click <b>Extensions → Apps Script</b></div></div>
+      <div class="setup-step"><div class="setup-num">3</div><div class="setup-step-text">Paste the code, click <b>Deploy → Web app</b>, access: <b>Anyone</b></div></div>
+      <div class="setup-step"><div class="setup-num">4</div><div class="setup-step-text">Copy the <b>Web App URL</b> and paste below</div></div>
+    </div>
+    <div class="form-group">
+      <input type="url" id="setupUrl" placeholder="https://script.google.com/macros/s/..." style="font-size:13px">
+    </div>
+    <button class="btn btn-blue" onclick="connectServer()">🔗 Connect</button>
+    <div style="text-align:center;margin-top:10px"><button class="btn-sm" style="color:var(--text3);background:none;border:none" onclick="skipSetup()">Use offline →</button></div>
+  </div>
+</div>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div style="flex:1">
+    <div class="topbar-title" id="pageTitle">Dashboard</div>
+    <div class="topbar-sub" id="pageSub">Overview</div>
+  </div>
+  <div class="sync-dot offline" id="syncDot"></div>
+  <button class="icon-btn" onclick="syncNow()" title="Sync">🔄</button>
+  <button class="icon-btn" onclick="openMenu()" title="Menu">☰</button>
+</div>
+
+<!-- CONTENT -->
+<div class="content">
+
+  <!-- DASHBOARD -->
+  <div class="section active" id="sec-dashboard">
+    <div class="welcome">
+      <h2 id="welcomeMsg">Welcome back 👋</h2>
+      <p id="welcomeDate"></p>
+      <div class="grand-label">Total Project Expenditure</div>
+      <div class="grand-total" id="grandTotal">₹0</div>
+    </div>
+    <div class="stat-grid" id="statGrid"></div>
+    <div class="quick-actions">
+      <div class="quick-action" onclick="navTo('attendance')"><div class="qa-icon">👥</div><div class="qa-label">Attendance</div></div>
+      <div class="quick-action" onclick="quickAdd()"><div class="qa-icon">➕</div><div class="qa-label">Add Entry</div></div>
+      <div class="quick-action" onclick="navTo('summary')"><div class="qa-label" style="margin-top:6px;font-size:11px">📊 Summary</div></div>
+    </div>
+  </div>
+
+  <!-- ATTENDANCE -->
+  <div class="section" id="sec-attendance">
+    <div class="card">
+      <div class="card-title"><span class="ct-icon">👥</span> Attendance Register</div>
+      <div class="form-grid-2" style="margin-bottom:12px">
+        <div class="form-group" style="margin-bottom:0"><label>Month</label><input type="month" id="attMonth"></div>
+        <div class="form-group" style="margin-bottom:0"><label>Period</label><select id="attPeriod"><option value="1">1st - 15th</option><option value="2">16th - End</option></select></div>
+      </div>
+      <div class="form-group"><label>Site Name</label><input type="text" id="attSite" placeholder="Enter site name"></div>
+      <div id="attInfo"></div>
+      <div id="attGrid"></div>
+      <div id="attSummary"></div>
+      <button class="btn btn-green" style="margin-top:12px" onclick="addWorker()">+ Add Worker</button>
+    </div>
+  </div>
+
+  <!-- GENERIC TABLE SECTIONS -->
+  <div class="section" id="sec-contract"><div class="card"><div class="card-title"><span class="ct-icon">📝</span> Contract Record</div><div id="contractTable"></div></div></div>
+  <div class="section" id="sec-morang"><div class="card"><div class="card-title"><span class="ct-icon">🪨</span> Morang & Gitti</div><div class="form-grid-2" style="margin-bottom:12px"><div class="form-group" style="margin-bottom:0"><label>Site</label><input type="text" id="morangSite" placeholder="Site"></div><div class="form-group" style="margin-bottom:0"><label>Period</label><input type="text" id="morangPeriod" placeholder="Sep 2026"></div></div><div id="morangTable"></div></div></div>
+  <div class="section" id="sec-cement"><div class="card"><div class="card-title"><span class="ct-icon">🏗️</span> Cement & TMT</div><div class="form-grid-2" style="margin-bottom:12px"><div class="form-group" style="margin-bottom:0"><label>Site</label><input type="text" id="cementSite" placeholder="Site"></div><div class="form-group" style="margin-bottom:0"><label>Period</label><input type="text" id="cementPeriod" placeholder="Sep 2026"></div></div><div id="cementTable"></div></div></div>
+  <div class="section" id="sec-bricks"><div class="card"><div class="card-title"><span class="ct-icon">🧱</span> Bricks Record</div><div class="form-grid-2" style="margin-bottom:12px"><div class="form-group" style="margin-bottom:0"><label>Site</label><input type="text" id="bricksSite" placeholder="Site"></div><div class="form-group" style="margin-bottom:0"><label>Period</label><input type="text" id="bricksPeriod" placeholder="Sep 2026"></div></div><div id="bricksTable"></div></div></div>
+  <div class="section" id="sec-wiring"><div class="card"><div class="card-title"><span class="ct-icon">⚡</span> Electric Wiring</div><div id="wiringTable"></div></div></div>
+  <div class="section" id="sec-plumbing"><div class="card"><div class="card-title"><span class="ct-icon">🔧</span> Plumbing</div><div id="plumbingTable"></div></div></div>
+  <div class="section" id="sec-carpenter"><div class="card"><div class="card-title"><span class="ct-icon">🪚</span> Carpenter</div><div id="carpenterTable"></div></div></div>
+  <div class="section" id="sec-tiles"><div class="card"><div class="card-title"><span class="ct-icon">🟫</span> Tiles & Marble</div><div id="tilesTable"></div></div></div>
+  <div class="section" id="sec-painting"><div class="card"><div class="card-title"><span class="ct-icon">🎨</span> Painting</div><div id="paintingTable"></div></div></div>
+  <div class="section" id="sec-expenses"><div class="card"><div class="card-title"><span class="ct-icon">💵</span> Daily Expenses</div><div class="form-grid-2" style="margin-bottom:12px"><div class="form-group" style="margin-bottom:0"><label>Site</label><input type="text" id="expensesSite" placeholder="Site"></div><div class="form-group" style="margin-bottom:0"><label>Period</label><input type="text" id="expensesPeriod" placeholder="Sep 2026"></div></div><div id="expensesTable"></div></div></div>
+
+  <!-- SUMMARY -->
+  <div class="section" id="sec-summary"><div class="card"><div class="card-title"><span class="ct-icon">📈</span> Expenditure Summary</div><p style="font-size:13px;color:var(--text3);margin-bottom:12px">Auto-calculated from all records</p><div id="summaryTable"></div></div></div>
+
+  <!-- PROJECT -->
+  <div class="section" id="sec-project"><div class="card"><div class="card-title"><span class="ct-icon">📋</span> Project Details</div><div id="pdView"></div><div id="pdEdit" style="display:none"></div></div></div>
+
+  <!-- NOTES -->
+  <div class="section" id="sec-notes"><div class="card"><div class="card-title"><span class="ct-icon">📒</span> Site Notes</div><textarea class="notes-box" id="notesArea" placeholder="Write site observations, instructions, issues..."></textarea><button class="btn btn-green" style="margin-top:12px" onclick="saveNotes()">💾 Save Notes</button></div></div>
+
+  <!-- PRINT -->
+  <div class="section" id="sec-print"><div class="card"><div class="card-title"><span class="ct-icon">🖨️</span> Print & Export</div>
+    <div class="form-group"><button class="btn btn-dark" onclick="printRecordBook()">🖨️ Print Full Record Book</button></div>
+    <div class="form-group"><button class="btn btn-green" onclick="exportAllCSV()">📥 Export CSV</button></div>
+    <div class="form-group"><button class="btn btn-outline" onclick="exportJSON()">💾 Backup (JSON)</button></div>
+    <div class="form-group"><button class="btn btn-outline" onclick="document.getElementById('importFile').click()">📂 Import Backup</button></div>
+    <input type="file" id="importFile" accept=".json" style="display:none" onchange="importJSON(event)">
+    <div class="form-group"><button class="btn btn-danger" onclick="clearAllData()">🗑️ Clear All Data</button></div>
+  </div></div>
+
+  <!-- SETTINGS -->
+  <div class="section" id="sec-settings"><div class="card"><div class="card-title"><span class="ct-icon">⚙️</span> Settings</div>
+    <div class="form-group"><label>Google Server URL</label><input type="url" id="settingsUrl" placeholder="https://script.google.com/macros/s/..." style="font-size:13px"></div>
+    <button class="btn btn-blue" onclick="updateApiUrl()">💾 Update URL</button>
+    <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
+      <button class="btn btn-green" onclick="syncNow()">🔄 Sync Now</button>
+      <div style="margin-top:8px"><button class="btn btn-outline" onclick="forceLoadFromServer()">📥 Load from Server</button></div>
+      <div id="syncInfo" style="margin-top:12px;font-size:13px;color:var(--text3)"></div>
+    </div>
+  </div></div>
+
+</div>
+
+<!-- FAB -->
+<button class="fab" id="fab" onclick="fabAction()">+</button>
+
+<!-- BOTTOM NAV -->
+<div class="bottom-nav">
+  <div class="bn-item active" onclick="navTo('dashboard')"><div class="bn-icon">🏠</div><div class="bn-label">Home</div></div>
+  <div class="bn-item" onclick="navTo('attendance')"><div class="bn-icon">👥</div><div class="bn-label">Attendance</div></div>
+  <div class="bn-item" onclick="quickAdd()"><div class="bn-icon">➕</div><div class="bn-label">Add</div></div>
+  <div class="bn-item" onclick="navTo('summary')"><div class="bn-icon">📊</div><div class="bn-label">Summary</div></div>
+  <div class="bn-item" onclick="openMenu()"><div class="bn-icon">☰</div><div class="bn-label">More</div></div>
+</div>
+
+<!-- SLIDE MENU -->
+<div class="slide-overlay" id="slideOverlay" onclick="closeMenu()"></div>
+<div class="slide-menu" id="slideMenu">
+  <div class="slide-header"><h3>🏗️ All Sections</h3><p>Construction Site Record Book</p></div>
+  <div class="slide-section-label">Overview</div>
+  <div class="slide-item" onclick="navTo('dashboard')"><span class="si-icon">📊</span> Dashboard</div>
+  <div class="slide-item" onclick="navTo('project')"><span class="si-icon">📋</span> Project Details</div>
+  <div class="slide-section-label">Daily Records</div>
+  <div class="slide-item" onclick="navTo('attendance')"><span class="si-icon">👥</span> Attendance</div>
+  <div class="slide-item" onclick="navTo('contract')"><span class="si-icon">📝</span> Contract Record</div>
+  <div class="slide-item" onclick="navTo('expenses')"><span class="si-icon">💵</span> Daily Expenses</div>
+  <div class="slide-section-label">Materials</div>
+  <div class="slide-item" onclick="navTo('morang')"><span class="si-icon">🪨</span> Morang & Gitti</div>
+  <div class="slide-item" onclick="navTo('cement')"><span class="si-icon">🏗️</span> Cement & TMT</div>
+  <div class="slide-item" onclick="navTo('bricks')"><span class="si-icon">🧱</span> Bricks</div>
+  <div class="slide-section-label">Trade Work</div>
+  <div class="slide-item" onclick="navTo('wiring')"><span class="si-icon">⚡</span> Electric Wiring</div>
+  <div class="slide-item" onclick="navTo('plumbing')"><span class="si-icon">🔧</span> Plumbing</div>
+  <div class="slide-item" onclick="navTo('carpenter')"><span class="si-icon">🪚</span> Carpenter</div>
+  <div class="slide-item" onclick="navTo('tiles')"><span class="si-icon">🟫</span> Tiles & Marble</div>
+  <div class="slide-item" onclick="navTo('painting')"><span class="si-icon">🎨</span> Painting</div>
+  <div class="slide-section-label">Reports</div>
+  <div class="slide-item" onclick="navTo('summary')"><span class="si-icon">📈</span> Expenditure Summary</div>
+  <div class="slide-item" onclick="navTo('notes')"><span class="si-icon">📒</span> Site Notes</div>
+  <div class="slide-item" onclick="navTo('print')"><span class="si-icon">🖨️</span> Print & Export</div>
+  <div class="slide-item" onclick="navTo('settings')"><span class="si-icon">⚙️</span> Settings</div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- MODAL -->
+<div class="modal-bg" id="modalBg" onclick="if(event.target===this)closeModal()">
+  <div class="sheet" id="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title" id="sheetTitle">Add Entry</div>
+    <div id="sheetBody"></div>
+  </div>
+</div>
+
+<script src="part1.js"></script>
+<script src="part2.js"></script>
+<script src="part3.js"></script>
+<script src="part4.js"></script>
+</body>
+</html>

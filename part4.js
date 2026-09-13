@@ -1,0 +1,41 @@
+// ===== PRINT =====
+function printRecordBook(){
+  var p=DB.project;var w=window.open('','_blank');var h='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Site Record Book</title><style>';
+  h+='body{font-family:"Times New Roman",serif;font-size:12px;color:#000;margin:20px}.page{page-break-after:always;margin-bottom:30px}.page:last-child{page-break-after:auto}h1{text-align:center;font-size:22px;margin:0}h2{text-align:center;font-size:14px;margin:5px 0;letter-spacing:2px}h3{text-align:center;font-size:18px;margin:20px 0 10px}.cover{border:3px double #000;padding:40px;margin:20px auto;max-width:600px;text-align:center}.pd-box{border:2px solid #000;margin:30px auto;padding:20px;max-width:500px}.pd-box h4{text-align:center;margin-bottom:15px}.pd-row{margin:8px 0;font-size:13px}.pd-row b{display:inline-block;min-width:180px}table{border-collapse:collapse;width:100%;margin:10px 0}th,td{border:1px solid #000;padding:5px 7px;font-size:11px;text-align:left}th{background:#1e3a5f;color:#fff;font-weight:bold;text-align:center}.total-row td{font-weight:bold;background:#f0f0f0;border-top:2px solid #000}.section-title{font-weight:bold;font-size:14px;margin:15px 0 8px}.meta-line{font-size:12px;margin:5px 0}.exp-total td{background:#1e3a5f!important;color:#fff;font-weight:bold;font-size:13px}@media print{body{margin:10mm}}</style></head><body>';
+  h+='<div class="page"><div class="cover"><h1>'+escapeHtml(p.companyName)+'</h1><h2>'+escapeHtml(p.subtitle)+'</h2><div style="font-size:20px;margin:10px">◆</div><h3>SITE RECORD BOOK</h3><div class="pd-box"><h4>PROJECT DETAILS</h4><div style="text-align:center;margin:10px 0;font-weight:bold">'+escapeHtml(p.projectName||'')+'</div></div><div style="text-align:left;margin-top:30px"><div class="pd-row"><b>Working Organization:</b> '+escapeHtml(p.organization||'')+'</div><div class="pd-row"><b>Financial Year:</b> '+escapeHtml(p.financialYear||'')+'</div><div class="pd-row"><b>Site Location / Block:</b> '+escapeHtml(p.siteLocation||'')+'</div><div class="pd-row"><b>Name of Sub Contractors:</b> '+escapeHtml(p.subContractors||'')+'</div></div></div></div>';
+  h+='<div class="page"><h3>DAILY SITE RECORD BOOK</h3><div class="section-title">1. ATTENDANCE REGISTER</div>';
+  if(meta.attSite)h+='<div class="meta-line">Site: '+escapeHtml(meta.attSite)+'</div>';
+  h+='<table><thead><tr><th>S.N.</th><th>Worker Name</th><th>Total Days</th><th>Rate</th><th>Total Wages</th><th>Advance</th><th>Balance</th></tr></thead><tbody>';
+  var td=0,tw=0,ta=0;DB.attendance.forEach(function(w,i){var d=w.days.filter(function(x){return x;}).length;var wages=d*(w.rate||0);var bal=wages-(w.advancePaid||0);td+=d;tw+=wages;ta+=(w.advancePaid||0);h+='<tr><td>'+(i+1)+'</td><td>'+escapeHtml(w.name)+'</td><td style="text-align:center">'+d+'</td><td style="text-align:right">'+(w.rate||0)+'</td><td style="text-align:right">'+wages+'</td><td style="text-align:right">'+(w.advancePaid||0)+'</td><td style="text-align:right">'+bal+'</td></tr>';});
+  if(!DB.attendance.length)h+='<tr><td colspan="7" style="text-align:center">No data</td></tr>';
+  h+='<tr class="total-row"><td colspan="2">TOTAL:</td><td style="text-align:center">'+td+'</td><td></td><td style="text-align:right">'+tw+'</td><td style="text-align:right">'+ta+'</td><td style="text-align:right">'+(tw-ta)+'</td></tr></tbody></table></div>';
+  h+='<div class="page"><div class="section-title">Contract Record File</div>'+printTable('contract',['Date','Head Name','Workers','Description','Amount'])+'</div>';
+  h+='<div class="page"><div class="section-title">3. MORANG & GITTI COMBINED RECORD</div>';if(meta.morangSite)h+='<div class="meta-line">Site: '+escapeHtml(meta.morangSite)+'</div>';if(meta.morangPeriod)h+='<div class="meta-line">Month/Period: '+escapeHtml(meta.morangPeriod)+'</div>';h+=printTable('morang',['Date','Material Type','Quantity','Rate','Amount'])+'</div>';
+  h+='<div class="page"><div class="section-title">2. CEMENT & TMT COMBINED RECORD</div>';if(meta.cementSite)h+='<div class="meta-line">Site: '+escapeHtml(meta.cementSite)+'</div>';if(meta.cementPeriod)h+='<div class="meta-line">Month/Period: '+escapeHtml(meta.cementPeriod)+'</div>';h+=printTable('cement',['Date','Material Type','Quantity','Rate','Amount','Dealer Name'])+'</div>';
+  h+='<div class="page"><div class="section-title">4. BRICKS RECORD</div>';if(meta.bricksSite)h+='<div class="meta-line">Site: '+escapeHtml(meta.bricksSite)+'</div>';if(meta.bricksPeriod)h+='<div class="meta-line">Month/Period: '+escapeHtml(meta.bricksPeriod)+'</div>';h+=printTable('bricks',['Date','Quality','Quantity','Receipt No.','Amount'])+'</div>';
+  [['Electric Wiring','wiring'],['Plumbing','plumbing'],['Carpenter','carpenter'],['Tiles and Marble','tilesMarble'],['Painting','painting']].forEach(function(t){h+='<div class="page"><div class="section-title">Construction Material Record: '+t[0]+'</div>'+printTable(t[1],['Date','Particular','Amount'])+'</div>';});
+  h+='<div class="page"><div class="section-title">5. DAILY EXPENSES RECORD</div>';if(meta.expensesSite)h+='<div class="meta-line">Site: '+escapeHtml(meta.expensesSite)+'</div>';if(meta.expensesPeriod)h+='<div class="meta-line">Month/Period: '+escapeHtml(meta.expensesPeriod)+'</div>';h+=printTable('expenses',['Date','Item/Description','Amount'])+'</div>';
+  var mT=0,gT=0,cT=0,tT=0;DB.morang.forEach(function(e){var mt=(e.materialType||'').toLowerCase();if(mt.indexOf('gitti')!==-1)gT+=(e.amount||0);else mT+=(e.amount||0);});DB.cement.forEach(function(e){var mt=(e.materialType||'').toLowerCase();if(mt.indexOf('tmt')!==-1||mt.indexOf('sariya')!==-1)tT+=(e.amount||0);else cT+=(e.amount||0);});
+  var sc=[['1. Total Labour',calcTotalLabour()],['2. Total Bricks',sumArr(DB.bricks,'amount')],['3. Total Morang',mT],['4. Gitti',gT],['5. TMT',tT],['6. Cement',cT],['7. Painting',sumArr(DB.painting,'amount')],['8. Wiring',sumArr(DB.wiring,'amount')],['9. Plumbing',sumArr(DB.plumbing,'amount')],['10. Tiles and Marble',sumArr(DB.tilesMarble,'amount')],['11. Iron (Chaukhats and Windows)',0],['12. Carpenter',sumArr(DB.carpenter,'amount')],['13. Boring',0],['14. Shuttering',0],['15. Personal Expenses',sumArr(DB.expenses,'amount')]];
+  var gt=sc.reduce(function(s,c){return s+c[1];},0);
+  h+='<div class="page"><h3>Project Expenditure Summary Sheet</h3><table><thead><tr><th>Category</th><th style="text-align:right">Amount</th></tr></thead><tbody>';
+  sc.forEach(function(c){h+='<tr><td>'+c[0]+'</td><td style="text-align:right">'+fmtNum(c[1])+'</td></tr>';});
+  h+='<tr class="exp-total"><td>TOTAL PROJECT COST / EXPENDITURE</td><td style="text-align:right">'+fmtNum(gt)+'</td></tr></tbody></table></div>';
+  h+='<div class="page"><h3>Site Notes & Observations</h3><div style="border:1px solid #000;min-height:400px;padding:15px;white-space:pre-wrap;font-size:13px">'+escapeHtml(DB.notes||'')+'</div></div>';
+  h+='</body></html>';w.document.write(h);w.document.close();setTimeout(function(){w.print();},500);
+}
+function printTable(dk,headers){
+  var data=DB[dk];var cfg=tblCfg[dk==='tilesMarble'?'tiles':dk];if(!cfg)return'<p>No data</p>';
+  var h='<table><thead><tr>';headers.forEach(function(x){h+='<th>'+x+'</th>';});h+='</tr></thead><tbody>';
+  if(!data.length)h+='<tr><td colspan="'+headers.length+'" style="text-align:center">No entries</td></tr>';
+  else{data.forEach(function(item){h+='<tr>';cfg.fields.forEach(function(f){var v=item[f.key];if(f.type==='date')v=fmtDate(v);if(f.key==='amount')v='₹'+fmtNum(v);h+='<td>'+(v||'')+'</td>';});h+='</tr>';});var total=sumArr(data,'amount');h+='<tr class="total-row"><td colspan="'+(headers.length-1)+'" style="text-align:right">TOTAL:</td><td style="text-align:right">₹'+fmtNum(total)+'</td></tr>';}
+  h+='</tbody></table>';return h;
+}
+
+// ===== TOAST =====
+function showToast(msg){var t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(function(){t.classList.remove('show');},2500);}
+
+// ===== INIT =====
+loadData();
+if(API_URL){document.getElementById('setupScreen').style.display='none';loadFromServer(function(){renderDashboard();});}
+else{var hasData=localStorage.getItem('conSiteRecordBook');if(hasData){document.getElementById('setupScreen').style.display='none';setSync('offline','Offline mode');renderDashboard();}}

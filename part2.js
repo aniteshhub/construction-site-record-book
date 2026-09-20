@@ -7,13 +7,15 @@ function getAttDates(){
   var dates=[];for(var d=sd;d<=ed;d++)dates.push(y+'-'+String(m).padStart(2,'0')+'-'+String(d).padStart(2,'0'));return dates;
 }
 function isToday(s){return s===todayStr();}
+function attDays(w){return (w.days||[]).reduce(function(s,d){return s+(d===true?1:(parseFloat(d)||0));},0);}
+function fmtDays(n){return String(Math.round((n||0)*100)/100);}
 function renderAttendance(){
   setVal('attSite',meta.attSite);
   if(!val('attMonth')){var d=new Date();setVal('attMonth',d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'));}
   autoSetPeriod();
   var dates=getAttDates();var todayIdx=-1;
   for(var i=0;i<dates.length;i++){if(isToday(dates[i])){todayIdx=i;break;}}
-  var info='<div style="font-size:12px;color:var(--text3);margin-bottom:8px">📅 Today: <b>'+fmtDateLong(todayStr())+'</b> — blue column</div>';
+  var info='<div style="font-size:12px;color:var(--text3);margin-bottom:8px">📅 Today: <b>'+fmtDateLong(todayStr())+'</b> — blue column · Tap cell: <b>A → P → H</b> (H = Half day)</div>';
   if(todayIdx>=0)info+='<button class="btn-sm btn-blue" style="margin-bottom:10px;background:var(--accent);color:#fff;border:none;border-radius:8px;cursor:pointer" onclick="markAllToday()">✅ Mark All Present Today</button>';
   document.getElementById('attInfo').innerHTML=info;
 
@@ -26,22 +28,22 @@ function renderAttendance(){
   }
 
   DB.attendance.forEach(function(w,idx){
-    var pc=w.days.filter(function(d){return d;}).length;var wages=pc*(w.rate||0);var bal=wages-(w.advancePaid||0);
+    var pc=attDays(w);var wages=pc*(w.rate||0);var bal=wages-(w.advancePaid||0);
     html+='<tr><td class="wname">'+escapeHtml(w.name)+'</td>';
-    for(var i=0;i<dates.length;i++){var p=w.days[i];var cls=p?'present':'absent';if(i===todayIdx)cls+=' today';html+='<td><div class="att-cell '+cls+'" onclick="toggleAtt('+idx+','+i+')">'+(p?'P':'A')+'</div></td>';}
-    html+='<td style="font-weight:800">'+pc+'</td>';
-    html+='<td><input type="number" value="'+(w.rate||0)+'" style="width:50px;font-size:11px;padding:3px;border:1px solid var(--border);border-radius:4px;text-align:center" onchange="updateAtt('+idx+',\'rate\',this.value)"></td>';
+    for(var i=0;i<dates.length;i++){var v=w.days[i];v=(v===true?1:(parseFloat(v)||0));var cls=v===1?'present':(v===0.5?'half':'absent');var lbl=v===1?'P':(v===0.5?'H':'A');if(i===todayIdx)cls+=' today';html+='<td><div class="att-cell '+cls+'" onclick="toggleAtt('+idx+','+i+')">'+lbl+'</div></td>';}
+    html+='<td style="font-weight:800">'+fmtDays(pc)+'</td>';
+    html+='<td><input type="number" value="'+(w.rate||0)+'" style="width:50px;font-size:11px;padding:3px;border:1px solid var(--border);border-radius:4px;text-align:center" onchange="updateAtt('+idx+','+'rate'+',this.value)"></td>';
     html+='<td style="font-weight:700">₹'+fmtNum(wages)+'</td>';
-    html+='<td><input type="number" value="'+(w.advancePaid||0)+'" style="width:50px;font-size:11px;padding:3px;border:1px solid var(--border);border-radius:4px;text-align:center" onchange="updateAtt('+idx+',\'advancePaid\',this.value)"></td>';
+    html+='<td><input type="number" value="'+(w.advancePaid||0)+'" style="width:50px;font-size:11px;padding:3px;border:1px solid var(--border);border-radius:4px;text-align:center" onchange="updateAtt('+idx+','+'advancePaid'+',this.value)"></td>';
     html+='<td style="font-weight:700;color:'+(bal<0?'var(--red)':'var(--green)')+'">₹'+fmtNum(bal)+'</td>';
     html+='</tr>';
   });
 
   if(DB.attendance.length>0){
-    var td=0,tw=0,ta=0;DB.attendance.forEach(function(w){var d=w.days.filter(function(x){return x;}).length;td+=d;tw+=d*(w.rate||0);ta+=(w.advancePaid||0);});
+    var td=0,tw=0,ta=0;DB.attendance.forEach(function(w){var d=attDays(w);td+=d;tw+=d*(w.rate||0);ta+=(w.advancePaid||0);});
     html+='<tr class="total-row"><td class="wname">TOTAL</td>';
     for(var i=0;i<dates.length;i++)html+='<td></td>';
-    html+='<td>'+td+'</td><td></td><td>₹'+fmtNum(tw)+'</td><td>₹'+fmtNum(ta)+'</td><td>₹'+fmtNum(tw-ta)+'</td></tr>';
+    html+='<td>'+fmtDays(td)+'</td><td></td><td>₹'+fmtNum(tw)+'</td><td>₹'+fmtNum(ta)+'</td><td>₹'+fmtNum(tw-ta)+'</td></tr>';
   }
   html+='</tbody></table></div>';
   document.getElementById('attGrid').innerHTML=html;
@@ -49,15 +51,15 @@ function renderAttendance(){
   // Summary chips
   var sc='<div class="att-summary">';
   sc+='<div class="att-chip">👥 <b>'+DB.attendance.length+'</b> workers</div>';
-  var td2=0;DB.attendance.forEach(function(w){td2+=w.days.filter(function(x){return x;}).length;});
-  sc+='<div class="att-chip">✅ <b>'+td2+'</b> present days</div>';
+  var td2=0;DB.attendance.forEach(function(w){td2+=attDays(w);});
+  sc+='<div class="att-chip">✅ <b>'+fmtDays(td2)+'</b> present days</div>';
   sc+='<div class="att-chip">💰 <b>₹'+fmtNum(calcTotalLabour())+'</b> wages</div>';
   sc+='</div>';
   document.getElementById('attSummary').innerHTML=DB.attendance.length>0?sc:'';
 }
-function addWorker(){var name=prompt('Enter worker name:');if(!name)return;var dates=getAttDates();DB.attendance.push({id:genId(),name:name,days:new Array(dates.length).fill(false),rate:0,advancePaid:0});saveData();renderAttendance();showToast('Worker added!');}
-function toggleAtt(wi,di){DB.attendance[wi].days[di]=!DB.attendance[wi].days[di];saveData();renderAttendance();}
-function markAllToday(){var dates=getAttDates();var ti=-1;for(var i=0;i<dates.length;i++){if(isToday(dates[i])){ti=i;break;}}if(ti<0){showToast('Today not in period');return;}DB.attendance.forEach(function(w){w.days[ti]=true;});saveData();renderAttendance();showToast('All marked present!');}
+function addWorker(){var name=prompt('Enter worker name:');if(!name)return;var dates=getAttDates();DB.attendance.push({id:genId(),name:name,days:new Array(dates.length).fill(0),rate:0,advancePaid:0});saveData();renderAttendance();showToast('Worker added!');}
+function toggleAtt(wi,di){var c=DB.attendance[wi].days[di];c=(c===true?1:(parseFloat(c)||0));DB.attendance[wi].days[di]=(c===0)?1:(c===1?0.5:0);saveData();renderAttendance();}
+function markAllToday(){var dates=getAttDates();var ti=-1;for(var i=0;i<dates.length;i++){if(isToday(dates[i])){ti=i;break;}}if(ti<0){showToast('Today not in period');return;}DB.attendance.forEach(function(w){w.days[ti]=1;});saveData();renderAttendance();showToast('All marked present!');}
 function updateAtt(wi,f,v){DB.attendance[wi][f]=parseFloat(v)||0;saveData();renderAttendance();}
 function deleteWorker(idx){if(!confirm('Delete '+DB.attendance[idx].name+'?'))return;DB.attendance.splice(idx,1);saveData();renderAttendance();showToast('Deleted');}
 

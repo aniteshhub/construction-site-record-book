@@ -4,7 +4,8 @@ var DB={project:{companyName:'MAA SHARDA CONSTRUCTIONS',subtitle:'ENGINEERS & CO
 var meta={morangSite:'',morangPeriod:'',cementSite:'',cementPeriod:'',bricksSite:'',bricksPeriod:'',expensesSite:'',expensesPeriod:'',attSite:''};
 var API_URL='',isOnline=false,syncTimer=null;
 
-function loadData(){try{var s=localStorage.getItem('conSiteRecordBook');if(s){var p=JSON.parse(s);DB=Object.assign(DB,p.db||{});meta=Object.assign(meta,p.meta||{});}API_URL=localStorage.getItem('conApiUrl')||'';}catch(e){}}
+function loadData(){try{var s=localStorage.getItem('conSiteRecordBook');if(s){var p=JSON.parse(s);DB=Object.assign(DB,p.db||{});meta=Object.assign(meta,p.meta||{});}API_URL=localStorage.getItem('conApiUrl')||'';migrateAttDays();}catch(e){}}
+function migrateAttDays(){DB.attendance.forEach(function(w){if(w.days)w.days=w.days.map(function(d){return d===true?1:(d===false?0:(parseFloat(d)||0));});});}
 function saveDataLocal(){saveMeta();localStorage.setItem('conSiteRecordBook',JSON.stringify({db:DB,meta:meta}));}
 function saveMeta(){meta.morangSite=val('morangSite');meta.morangPeriod=val('morangPeriod');meta.cementSite=val('cementSite');meta.cementPeriod=val('cementPeriod');meta.bricksSite=val('bricksSite');meta.bricksPeriod=val('bricksPeriod');meta.expensesSite=val('expensesSite');meta.expensesPeriod=val('expensesPeriod');meta.attSite=val('attSite');}
 function saveData(){saveDataLocal();scheduleSync();}
@@ -37,7 +38,7 @@ function loadFromServer(cb){
       if(r.success&&r.data){
         if(r.data.project)DB.project=Object.assign(DB.project,r.data.project);
         var tabs=['attendance','contract','morang','cement','bricks','wiring','plumbing','carpenter','tilesMarble','painting','expenses'];
-        tabs.forEach(function(t){if(r.data[t]){DB[t]=r.data[t].map(function(item){if(t==='attendance'&&item.days&&typeof item.days==='string')item.days=item.days.split(',').map(function(d){return d==='true';});return item;});}});
+        tabs.forEach(function(t){if(r.data[t]){DB[t]=r.data[t].map(function(item){if(t==='attendance'&&item.days&&typeof item.days==='string')item.days=item.days.split(',').map(function(d){return d==='true'?1:(parseFloat(d)||0);});return item;});}});
         if(r.data.notes!==undefined)DB.notes=r.data.notes;
         saveDataLocal();setSync('online','Loaded: '+new Date().toLocaleTimeString('en-IN'));if(cb)cb(true);
       }else{setSync('offline','Load error');if(cb)cb(false);}
@@ -55,8 +56,8 @@ function updateApiUrl(){var u=val('settingsUrl').trim();if(!u){showToast('Enter 
 
 // ===== NAV =====
 var currentSection='dashboard';
-var navTitles={dashboard:'Dashboard',project:'Project Details',attendance:'Attendance',contract:'Contract Record',morang:'Morang & Gitti',cement:'Cement & TMT',bricks:'Bricks',wiring:'Electric Wiring',plumbing:'Plumbing',carpenter:'Carpenter',tiles:'Tiles & Marble',painting:'Painting',expenses:'Daily Expenses',summary:'Summary',notes:'Site Notes',print:'Print & Export',settings:'Settings'};
-var navSubs={dashboard:'Overview',project:'Project information',attendance:'Worker attendance & wages',contract:'Contract work records',morang:'Morang & Gitti materials',cement:'Cement & TMT materials',bricks:'Bricks record',wiring:'Electrical wiring',plumbing:'Plumbing work',carpenter:'Carpentry work',tiles:'Tiles & Marble',painting:'Painting work',expenses:'Daily site expenses',summary:'Expenditure breakdown',notes:'Notes & observations',print:'Print and export',settings:'App settings'};
+var navTitles={dashboard:'Dashboard',project:'Project Details',attendance:'Attendance',contract:'Contract Record',morang:'Morang & Gitti',cement:'Cement & TMT',bricks:'Bricks',wiring:'Electric Wiring',plumbing:'Plumbing',carpenter:'Carpenter',tiles:'Tiles & Marble',painting:'Painting',expenses:'Daily Expenses',summary:'Summary',notes:'Site Notes',print:'Print & Export',settings:'Settings',devtools:'Custom Code'};
+var navSubs={dashboard:'Overview',project:'Project information',attendance:'Worker attendance & wages',contract:'Contract work records',morang:'Morang & Gitti materials',cement:'Cement & TMT materials',bricks:'Bricks record',wiring:'Electrical wiring',plumbing:'Plumbing work',carpenter:'Carpentry work',tiles:'Tiles & Marble',painting:'Painting work',expenses:'Daily site expenses',summary:'Expenditure breakdown',notes:'Notes & observations',print:'Print and export',settings:'App settings',devtools:'Run your own code in the app'};
 
 function navTo(s){
   currentSection=s;
@@ -69,7 +70,7 @@ function navTo(s){
   if(bnMap[s]!==undefined)document.querySelectorAll('.bn-item')[bnMap[s]].classList.add('active');
   renderSection(s);closeMenu();window.scrollTo(0,0);
   var fab=document.getElementById('fab');
-  fab.style.display=(s==='dashboard'||s==='notes'||s==='summary'||s==='print'||s==='project'||s==='settings')?'none':'flex';
+  fab.style.display=(s==='dashboard'||s==='notes'||s==='summary'||s==='print'||s==='project'||s==='settings'||s==='devtools')?'none':'flex';
 }
 
 function renderSection(s){
@@ -81,6 +82,7 @@ function renderSection(s){
     case'summary':renderSummary();break;
     case'notes':setVal('notesArea',DB.notes);break;
     case'settings':setVal('settingsUrl',API_URL);break;
+    case'devtools':renderDevtools();break;
   }
 }
 
@@ -107,7 +109,7 @@ function renderDashboard(){
     return '<div class="stat-card '+c.cls+'" onclick="navTo(\''+c.sec+'\')"><div class="sc-icon">'+c.icon+'</div><div class="sc-label">'+c.label+'</div><div class="sc-value">'+c.value+'</div><div class="sc-sub">'+c.sub+'</div></div>';
   }).join('');
 }
-function calcTotalLabour(){var t=0;DB.attendance.forEach(function(w){var d=w.days.filter(function(x){return x;}).length;t+=d*(w.rate||0);});return t;}
+function calcTotalLabour(){var t=0;DB.attendance.forEach(function(w){var d=attDays(w);t+=d*(w.rate||0);});return t;}
 function sumArr(a,k){return a.reduce(function(s,e){return s+(parseFloat(e[k])||0);},0);}
 
 // ===== PROJECT =====

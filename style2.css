@@ -16,6 +16,8 @@ tbody tr:active{background:var(--accent-light)}
 .att-cell{cursor:pointer;font-weight:700;border-radius:4px;padding:4px 2px}
 .att-cell.present{background:var(--green-light);color:var(--green)}
 .att-cell.absent{background:var(--red-light);color:var(--red)}
+.att-cell.half{background:var(--amber-light);color:var(--amber)}
+.att-cell.today.half{background:var(--amber);color:#fff;box-shadow:0 0 0 2px var(--amber)}
 .att-cell.today.present{background:var(--accent);color:#fff;box-shadow:0 0 0 2px var(--accent)}
 .att-cell.today.absent{background:var(--amber-light);color:var(--amber);box-shadow:0 0 0 2px var(--amber)}
 .att-summary{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}

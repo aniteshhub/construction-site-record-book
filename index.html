@@ -118,6 +118,33 @@
     </div>
   </div></div>
 
+  <!-- CUSTOM CODE -->
+  <div class="section" id="sec-devtools"><div class="card"><div class="card-title"><span class="ct-icon">🧩</span> Custom Code</div>
+    <p style="font-size:12px;color:var(--text3);margin-bottom:10px">AI se code likhwa ke yahan paste karo aur <b>▶ Run</b> dabao — app mein turant chal jayega. Code save bhi ho jayega, aur chaho to app kholte hi auto-run hoga.</p>
+    <textarea id="devCode" rows="10" spellcheck="false" style="width:100%;box-sizing:border-box;font-family:monospace;font-size:12px;padding:10px;border:1px solid var(--border);border-radius:8px;background:#f6f8fa;color:#111" placeholder="// Yahan apna JavaScript code paste karo..."></textarea>
+    <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn btn-green" onclick="runCustomCode()">▶ Run</button>
+      <button class="btn btn-blue" onclick="saveCustomCode()">💾 Save</button>
+      <button class="btn btn-outline" onclick="document.getElementById('devOutput').innerHTML=''">🧹 Clear</button>
+      <button class="btn btn-outline" onclick="devInsertExample()">📋 Example</button>
+    </div>
+    <label style="display:flex;align-items:center;gap:6px;margin-top:10px;font-size:13px;cursor:pointer"><input type="checkbox" id="devAuto" onchange="saveCustomCode()"> App kholte hi ye code auto-run karo</label>
+    <div id="devOutput" style="margin-top:12px"></div>
+    <details style="margin-top:14px">
+      <summary style="font-size:13px;cursor:pointer;font-weight:600">📖 Help — code mein kya-kya use kar sakte ho?</summary>
+      <div style="font-size:12px;color:var(--text3);line-height:1.7;margin-top:8px">
+        <b>DB</b> — poora data (DB.attendance, DB.expenses, DB.cement ...)<br>
+        <b>saveData()</b> — changes save + sync karne ke liye<br>
+        <b>renderCurrent()</b> — current page refresh<br>
+        <b>navTo('section')</b> — kisi page pe jaane ke liye (attendance, expenses, summary ...)<br>
+        <b>showToast('message')</b> — chhota popup message<br>
+        <b>genId(), todayStr(), fmtNum(), sumArr()</b> — helper functions<br>
+        <b>console.log(...)</b> — output neeche dikhega<br><br>
+        Note: Save karne ke baad "auto-run" on karo to app kholte hi code chalega — nayi khud ki cheezein permanent ho jayengi.
+      </div>
+    </details>
+  </div></div>
+
 </div>
 
 <!-- FAB -->
@@ -158,6 +185,8 @@
   <div class="slide-item" onclick="navTo('notes')"><span class="si-icon">📒</span> Site Notes</div>
   <div class="slide-item" onclick="navTo('print')"><span class="si-icon">🖨️</span> Print & Export</div>
   <div class="slide-item" onclick="navTo('settings')"><span class="si-icon">⚙️</span> Settings</div>
+  <div class="slide-section-label">Tools</div>
+  <div class="slide-item" onclick="navTo('devtools')"><span class="si-icon">🧩</span> Custom Code</div>
 </div>
 
 <!-- TOAST -->
@@ -176,5 +205,6 @@
 <script src="part2.js"></script>
 <script src="part3.js"></script>
 <script src="part4.js"></script>
+<script src="part5.js"></script>
 </body>
 </html>

@@ -32,9 +32,9 @@ function renderAttendance(){
     html+='<tr><td class="wname">'+escapeHtml(w.name)+'</td>';
     for(var i=0;i<dates.length;i++){var v=w.days[i];v=(v===true?1:(parseFloat(v)||0));var cls=v===1?'present':(v===0.5?'half':'absent');var lbl=v===1?'P':(v===0.5?'H':'A');if(i===todayIdx)cls+=' today';html+='<td><div class="att-cell '+cls+'" onclick="toggleAtt('+idx+','+i+')">'+lbl+'</div></td>';}
     html+='<td style="font-weight:800">'+fmtDays(pc)+'</td>';
-    html+='<td><input type="number" value="'+(w.rate||0)+'" style="width:50px;font-size:11px;padding:3px;border:1px solid var(--border);border-radius:4px;text-align:center" onchange="updateAtt('+idx+','+'rate'+',this.value)"></td>';
+    html+='<td><input type="number" value="'+(w.rate||0)+'" style="width:50px;font-size:11px;padding:3px;border:1px solid var(--border);border-radius:4px;text-align:center" onchange="updateAtt('+idx+',\'rate\',this.value)"></td>';
     html+='<td style="font-weight:700">₹'+fmtNum(wages)+'</td>';
-    html+='<td><input type="number" value="'+(w.advancePaid||0)+'" style="width:50px;font-size:11px;padding:3px;border:1px solid var(--border);border-radius:4px;text-align:center" onchange="updateAtt('+idx+','+'advancePaid'+',this.value)"></td>';
+    html+='<td><input type="number" value="'+(w.advancePaid||0)+'" style="width:50px;font-size:11px;padding:3px;border:1px solid var(--border);border-radius:4px;text-align:center" onchange="updateAtt('+idx+',\'advancePaid\',this.value)"></td>';
     html+='<td style="font-weight:700;color:'+(bal<0?'var(--red)':'var(--green)')+'">₹'+fmtNum(bal)+'</td>';
     html+='</tr>';
   });
